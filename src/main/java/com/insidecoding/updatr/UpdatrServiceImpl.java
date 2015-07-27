@@ -22,234 +22,193 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
+import com.insidecoding.updatr.model.CheckForVersionResult;
+import com.insidecoding.updatr.model.UpdatrSession;
+import com.insidecoding.updatr.model.Version;
 
 /**
- * Implementation of the ({@code UpdaterService}.
+ * Implementation of the {@code UpdaterService}.
  * 
  * @author ludovicianul
  *
  */
-public class UpdatrServiceImpl implements UpdatrService {
-	private static final int BUFFER_SIZE = 1024;
-	private static final int TIMEOUT = 60000;
+public final class UpdatrServiceImpl implements UpdatrService {
+  private static final int BUFFER_SIZE = 1024;
+  private static final int TIMEOUT = 60000;
 
-	private static final Logger LOG = LoggerFactory.getLogger(UpdatrService.class);
+  private static final String DOWNLOAD_URL = "download_url";
+  private static final String CURRENT_VERSION = "current_version";
+  private static final String NEW_LIBS_URL = "new_libs";
+  private static final String RELEASE_NOTES = "release_notes";
 
-	@Inject
-	@Named("updatrUrl")
-	private String updatrUrl;
+  private static final Logger LOG = LoggerFactory.getLogger(UpdatrService.class);
 
-	@Inject
-	@Named("existingVersion")
-	private String existingVersion;
+  @Override
+  public CheckForVersionResult checkForNewVersion(final String updatrUrl,
+      final String existingVersion) throws IOException, InvalidUpdatrFormatException {
+    Map<String, String> properties = this.loadPropertiesMap(updatrUrl);
+    Version newVersion = Version.fromString(properties.get(CURRENT_VERSION));
+    Version currentVersion = Version.fromString(existingVersion);
+    LOG.info("Checking for updates at: " + updatrUrl);
+    LOG.info("Comparing current version: " + currentVersion + " with available version: "
+        + newVersion);
 
-	@Inject
-	@Named("currentVersionKey")
-	private String currentVersionKey;
+    CheckForVersionResult.Builder checkBuilder = new CheckForVersionResult.Builder();
 
-	@Inject
-	@Named("downloadUrlKey")
-	private String downloadUrlKey;
+    if (newVersion.compareTo(currentVersion) > 0) {
+      checkBuilder.withIsNewVersion(true).withDownloadUrl(properties.get(DOWNLOAD_URL))
+          .withReleaseNotesUrl(properties.get(RELEASE_NOTES))
+          .withNewLibsUrl(properties.get(NEW_LIBS_URL))
+          .withAvailableVersion(properties.get(CURRENT_VERSION));
+      LOG.info("New version available");
+    } else {
+      checkBuilder.withIsNewVersion(false);
+      LOG.info("No new version available");
+    }
 
-	@Inject
-	@Named("releaseNotesKey")
-	private String releaseNotesKey;
+    return checkBuilder.build();
+  }
 
-	@Inject
-	@Named("newLibsKey")
-	private String newLibsKey;
+  @Override
+  public boolean performUpdate(final UpdatrSession session, final UpdatrCallback callback)
+      throws IOException, UpdatrProcessingException {
+    File projectJar = new File(session.getAppName() + "-" + session.getAvailableVersion() + ".jar");
+    LOG.info("Downloading the new version to file: " + projectJar.getPath());
 
-	@Inject
-	@Named("projectName")
-	private String projectName;
+    this.loadUrlToFile(session.getDownloadUrl(), projectJar);
+    this.downloadNewLibs(session.getNewLibsUrl());
+    this.replaceNewVersionInScript(session);
+    this.printReleaseNotes(session.getReleaseNotesUrl());
 
-	@Inject
-	@Named("scriptName")
-	private String scriptName;
+    LOG.info("!!! The new version will be picked up on the next run! !!!");
 
-	private void runPreconditions() {
-		Preconditions.checkNotNull(updatrUrl);
-		Preconditions.checkNotNull(existingVersion);
-		Preconditions.checkNotNull(currentVersionKey);
-		Preconditions.checkNotNull(downloadUrlKey);
-		Preconditions.checkNotNull(releaseNotesKey);
-		Preconditions.checkNotNull(newLibsKey);
-	}
+    return true;
+  }
 
-	@Override
-	public final UpdatrResult checkForNewVersion(UpdatrCallback callback) {
-		this.runPreconditions();
-		UpdatrResult result = UpdatrResult.create().withExistingVersion(existingVersion);
+  private Map<String, String> loadPropertiesMap(final String updatrUrl) throws IOException,
+      InvalidUpdatrFormatException {
+    URL url = new URL(updatrUrl);
+    Map<String, String> properties = new HashMap<String, String>();
+    boolean valid = true;
+    try (BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"))) {
+      String inputLine;
 
-		try {
-			Map<String, String> properties = this.loadPropertiesMap();
+      String[] lineItems;
+      while ((inputLine = in.readLine()) != null) {
+        LOG.debug(inputLine);
 
-			Version newVersion = Version.fromString(properties.get(currentVersionKey));
-			Version currentVersion = Version.fromString(existingVersion);
+        lineItems = inputLine.split("=");
 
-			if (newVersion.compareTo(currentVersion) > 0) {
-				result.newVersionAvailable(true).withDownloadUrl(properties.get(downloadUrlKey))
-						.withReleaseNotesUrl(properties.get(releaseNotesKey))
-						.withNewLibsUrl(properties.get(newLibsKey)).withNewVersion(properties.get(currentVersionKey));
-				LOG.info("New version available");
-			} else {
-				result.newVersionAvailable(false);
-				LOG.info("No new version available");
-			}
-		} catch (Exception e) {
-			LOG.warn("Error while checking for new version. ", e);
-			result.withCheckForVersionException(e);
-		}
+        if (lineItems.length > 1) {
+          properties.put(lineItems[0].trim(), lineItems[1].trim());
+        } else {
+          LOG.info("Invalid line: " + inputLine);
+        }
+      }
+    }
 
-		this.processResult(result);
+    if (!valid || properties.isEmpty()) {
+      throw new InvalidUpdatrFormatException();
+    }
 
-		callback.processResult(result);
+    return properties;
+  }
 
-		return result;
-	}
+  private void printReleaseNotes(final String releaseNotesUrl) throws IOException {
+    File tempReleaseNotes = File.createTempFile("release_notes", "tmp");
+    this.loadUrlToFile(releaseNotesUrl, tempReleaseNotes);
 
-	private Map<String, String> loadPropertiesMap() throws IOException {
-		URL u = new URL(updatrUrl);
-		BufferedReader in = new BufferedReader(new InputStreamReader(u.openStream(), "UTF-8"));
-		String inputLine;
+    try (BufferedReader reader = new BufferedReader(new FileReader(tempReleaseNotes))) {
+      String line = null;
+      LOG.info("============= Release notes ================");
+      while ((line = reader.readLine()) != null) {
+        LOG.info(line);
+      }
+    }
 
-		Map<String, String> properties = new HashMap<String, String>();
+    LOG.info("============================================");
+  }
 
-		String[] lineItems;
-		while ((inputLine = in.readLine()) != null) {
-			LOG.debug(inputLine);
+  private void loadUrlToFile(final String url, final File outputFile) throws IOException {
+    LOG.info("Downloading " + outputFile.getName() + " from url: [" + url + "]");
 
-			lineItems = inputLine.split("=");
+    URL website = new URL(url);
+    URLConnection connection = website.openConnection();
+    connection.setReadTimeout(TIMEOUT);
 
-			if (lineItems.length > 1) {
-				properties.put(lineItems[0], inputLine.substring(inputLine.indexOf("=") + 1));
-			}
-		}
+    try (ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
+        FileOutputStream fos = new FileOutputStream(outputFile);) {
 
-		in.close();
+      long expectedSize = connection.getContentLength();
+      LOG.info("Expected size: " + expectedSize);
+      long transferedSize = 0L;
 
-		return properties;
-	}
+      while (transferedSize < expectedSize) {
+        transferedSize += fos.getChannel().transferFrom(rbc, transferedSize, 1 << 24);
+        LOG.info(transferedSize + " bytes received");
+      }
 
-	private void processResult(UpdatrResult upResult) {
-		if (upResult.checkForVersionException() == null && upResult.newVersionAvailable()) {
-			try {
-				File projectJar = new File(projectName + "-" + upResult.newVersion() + ".jar");
+    }
 
-				LOG.info("Downloading the new version...");
+    LOG.info("Download " + outputFile.getName() + " done!");
+  }
 
-				this.loadUrlToFile(upResult.downloadUrl(), projectJar);
-				this.downloadNewLibs(upResult);
-				this.replaceNewVersionInScript(upResult);
-				this.printReleaseNotes(upResult);
+  private void downloadNewLibs(final String newLibsUrl) throws IOException {
+    File tempZip = File.createTempFile("libs", "tmp");
+    this.loadUrlToFile(newLibsUrl, tempZip);
 
-				upResult.autoUpdateSuccessful(true);
-				LOG.info("!!! The new version will be picked up on the next run! !!!");
+    try (ZipInputStream zipIn = new ZipInputStream(new FileInputStream(tempZip),
+        Charset.forName("UTF-8"))) {
+      ZipEntry entry = zipIn.getNextEntry();
+      LOG.info("Unziping libs...");
+      while (entry != null) {
+        LOG.info("Current entry: " + entry.getName());
+        String filePath = "lib" + File.separator + entry.getName();
+        extractFile(zipIn, filePath);
 
-			} catch (Exception e) {
-				LOG.warn("Exception occured when downloading the new version: " + e.getMessage());
-				LOG.debug("Exception: ", e);
-				upResult.withUpdateProcessException(e);
-			}
-		}
-	}
+        zipIn.closeEntry();
+        entry = zipIn.getNextEntry();
+      }
+    }
+    LOG.info("Unziping done!");
 
-	private void printReleaseNotes(UpdatrResult upResult) throws IOException {
-		File tempReleaseNotes = File.createTempFile("release_notes", "tmp");
-		this.loadUrlToFile(upResult.releaseNotesUrl(), tempReleaseNotes);
+  }
 
-		BufferedReader reader = new BufferedReader(new FileReader(tempReleaseNotes));
-		String line = null;
-		LOG.info("============= Release notes ================");
-		while ((line = reader.readLine()) != null) {
-			LOG.info(line);
-		}
-		reader.close();
-		LOG.info("============================================");
-	}
+  private void replaceNewVersionInScript(final UpdatrSession session) throws IOException {
+    List<String> fileLines = new ArrayList<String>();
 
-	private void loadUrlToFile(String url, File outputFile) throws IOException {
-		LOG.info("Downloading " + outputFile.getName() + " from url: [" + url + "]");
+    LOG.info("Replacing the app running script.");
+    try (BufferedReader reader = new BufferedReader(new FileReader(
+        new File(session.getScriptName())))) {
+      String line = null;
+      while ((line = reader.readLine()) != null) {
+        line = line.replaceAll(session.getAppName() + "-" + session.getExistingVersion(),
+            session.getAppName() + "-" + session.getAvailableVersion());
+        fileLines.add(line);
+      }
+    }
 
-		URL website = new URL(url);
-		URLConnection connection = website.openConnection();
-		connection.setReadTimeout(TIMEOUT);
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(session.getAppName())))) {
+      for (String toWrite : fileLines) {
+        writer.write(toWrite);
+        writer.newLine();
+      }
+    }
+    LOG.info("Script updated successfuly");
+  }
 
-		ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
-		FileOutputStream fos = new FileOutputStream(outputFile);
+  private void extractFile(final ZipInputStream zipIn, final String filePath) throws IOException {
+    try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) {
+      byte[] bytesIn = new byte[BUFFER_SIZE];
+      int read = 0;
+      while ((read = zipIn.read(bytesIn)) != -1) {
+        bos.write(bytesIn, 0, read);
+      }
+    }
 
-		long expectedSize = connection.getContentLength();
-		LOG.info("Expected size: " + expectedSize);
-		long transferedSize = 0L;
-
-		while (transferedSize < expectedSize) {
-			transferedSize += fos.getChannel().transferFrom(rbc, transferedSize, 1 << 24);
-			LOG.info(transferedSize + " bytes received");
-		}
-		fos.flush();
-		fos.close();
-
-		LOG.info("Download " + outputFile.getName() + " done!");
-	}
-
-	private void downloadNewLibs(UpdatrResult upResult) throws IOException {
-		File tempZip = File.createTempFile("libs", "tmp");
-		this.loadUrlToFile(upResult.newLibsUrl(), tempZip);
-
-		ZipInputStream zipIn = new ZipInputStream(new FileInputStream(tempZip), Charset.forName("UTF-8"));
-		ZipEntry entry = zipIn.getNextEntry();
-		LOG.info("Unziping...");
-		while (entry != null) {
-			LOG.info(entry.getName());
-			String filePath = "lib" + File.separator + entry.getName();
-			extractFile(zipIn, filePath);
-
-			zipIn.closeEntry();
-			entry = zipIn.getNextEntry();
-		}
-		LOG.info("Unziping done!");
-		zipIn.close();
-	}
-
-	private void replaceNewVersionInScript(UpdatrResult upResult) throws IOException {
-		List<String> fileLines = new ArrayList<String>();
-
-		LOG.info("Replacing the project running script.");
-		BufferedReader reader = new BufferedReader(new FileReader(new File(scriptName)));
-		String line = null;
-		while ((line = reader.readLine()) != null) {
-			line = line.replaceAll(projectName + "-" + upResult.existingVersion(),
-					projectName + "-" + upResult.newVersion());
-			fileLines.add(line);
-		}
-
-		reader.close();
-
-		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(projectName)));
-		for (String toWrite : fileLines) {
-			writer.write(toWrite);
-			writer.newLine();
-		}
-
-		writer.close();
-		LOG.info("Script updated successfuly");
-	}
-
-	private void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
-		BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
-		byte[] bytesIn = new byte[BUFFER_SIZE];
-		int read = 0;
-		while ((read = zipIn.read(bytesIn)) != -1) {
-			bos.write(bytesIn, 0, read);
-		}
-		bos.close();
-	}
+  }
 
 }
