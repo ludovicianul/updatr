@@ -56,7 +56,7 @@ public final class UpdatrServiceImpl implements UpdatrService {
     LOG.info("Comparing current version: " + currentVersion + " with available version: "
         + newVersion);
 
-    CheckForVersionResult.Builder checkBuilder = new CheckForVersionResult.Builder();
+    CheckForVersionResult.Builder checkBuilder = new CheckForVersionResult.Builder(existingVersion);
 
     if (newVersion.compareTo(currentVersion) > 0) {
       checkBuilder.withIsNewVersion(true).withDownloadUrl(properties.get(DOWNLOAD_URL))
@@ -83,9 +83,32 @@ public final class UpdatrServiceImpl implements UpdatrService {
     this.replaceNewVersionInScript(session);
     this.printReleaseNotes(session.getReleaseNotesUrl());
 
-    LOG.info("!!! The new version will be picked up on the next run! !!!");
+    LOG.info("!!! Re-launching app...!!!");
+    this.relaunchApp(session);
+    callback.processResult(session);
 
     return true;
+  }
+
+  private void relaunchApp(UpdatrSession session) {
+    try {
+      ProcessBuilder ps = new ProcessBuilder(session.getScriptCommand());
+      ps.redirectErrorStream(true);
+      Process pr = ps.start();
+
+      try (BufferedReader in = new BufferedReader(new InputStreamReader(pr.getInputStream()))) {
+        String line;
+        while ((line = in.readLine()) != null) {
+          LOG.info(line);
+        }
+        pr.waitFor();
+        LOG.info("Finished running with the new version!");
+      }
+    } catch (Exception e) {
+      LOG.warn(
+          "Application restart failed. Please re-run the application in order to benefit from the last update!",
+          e);
+    }
   }
 
   private Map<String, String> loadPropertiesMap(final String updatrUrl) throws IOException,
@@ -156,6 +179,13 @@ public final class UpdatrServiceImpl implements UpdatrService {
     LOG.info("Download " + outputFile.getName() + " done!");
   }
 
+  /**
+   * TODO Handle complicated cases like same library with multiple versions or skipping multiple
+   * versions when updating.
+   * 
+   * @param newLibsUrl
+   * @throws IOException
+   */
   private void downloadNewLibs(final String newLibsUrl) throws IOException {
     File tempZip = File.createTempFile("libs", "tmp");
     this.loadUrlToFile(newLibsUrl, tempZip);
@@ -208,7 +238,6 @@ public final class UpdatrServiceImpl implements UpdatrService {
         bos.write(bytesIn, 0, read);
       }
     }
-
   }
 
 }

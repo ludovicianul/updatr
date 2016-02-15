@@ -15,6 +15,11 @@ public final class UpdatrSession {
   private String newLibsUrl;
   private String appName;
   private String scriptName;
+  private String[] scriptCommand;
+
+  public String[] getScriptCommand() {
+    return this.scriptCommand;
+  }
 
   public String getExistingVersion() {
     return existingVersion;
@@ -52,6 +57,7 @@ public final class UpdatrSession {
     private String newLibsUrl;
     private String appName;
     private String scriptName;
+    private String[] scriptCommand;
 
     public Builder(CheckForVersionResult result) {
       this.availableVersion = result.getAvailableVersion();
@@ -78,6 +84,11 @@ public final class UpdatrSession {
       this.scriptName = name;
       return this;
     }
+
+    public Builder withScriptParams(String[] command) {
+      this.scriptCommand = command;
+      return this;
+    }
   }
 
   private UpdatrSession(Builder builder) {
@@ -88,6 +99,7 @@ public final class UpdatrSession {
     this.newLibsUrl = builder.newLibsUrl;
     this.appName = builder.appName;
     this.scriptName = builder.scriptName;
+    this.scriptCommand = builder.scriptCommand;
   }
 
 }
