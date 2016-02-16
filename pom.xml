@@ -9,7 +9,9 @@
 	<description>Checks for the latest version of programs and automatically updates them</description>
 	<licenses>
 		<license>
-			Apache License 2.0
+			<name>The Apache Software License, Version 2.0</name>
+			<url>LICENSE</url>
+			<distribution>repo</distribution>
 		</license>
 	</licenses>
 
