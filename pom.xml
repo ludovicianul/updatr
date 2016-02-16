@@ -289,4 +289,11 @@
 		</dependency>
 	</dependencies>
 	<url>https://github.com/ludovicianul/updatr</url>
+	<developers>
+		<developer>
+			<name>ludovicianul</name>
+			<email>iliemad@gmail.com</email>
+			<url>http://insidecoding.com</url>
+		</developer>
+	</developers>
 </project>
