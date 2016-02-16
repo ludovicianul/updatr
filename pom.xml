@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.insidecoding</groupId>
 	<artifactId>updatr</artifactId>
@@ -6,6 +7,11 @@
 	<name>updaTr</name>
 	<packaging>jar</packaging>
 	<description>Checks for the latest version of programs and automatically updates them</description>
+	<licenses>
+		<license>
+			Apache License 2.0
+		</license>
+	</licenses>
 
 	<properties>
 		<junit.version>4.11</junit.version>
@@ -39,11 +45,11 @@
 	</distributionManagement>
 
 	<scm>
-		<url>https://github.com/ludovicianul/updatr.git</url>
-		<connection>scm:git:https://github.com/ludovicianul/updatr.git</connection>
-		<developerConnection>scm:git:https://github.com/ludovicianul/updatr.git</developerConnection>
-	  <tag>HEAD</tag>
-  </scm>
+		<url>git@github.com:ludovicianul/updatr.git</url>
+		<connection>scm:git@github.com:ludovicianul/updatr.git</connection>
+		<developerConnection>scm:git@github.com:ludovicianul/updatr.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
 
 	<build>
 		<plugins>
@@ -282,4 +288,5 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<url>https://github.com/ludovicianul/updatr</url>
 </project>
