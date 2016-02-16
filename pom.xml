@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.insidecoding</groupId>
 	<artifactId>updatr</artifactId>
-	<version>1.14-SNAPSHOT</version>
+	<version>1.14</version>
 	<name>updaTr</name>
 	<packaging>jar</packaging>
 	<description>Checks for the latest version of programs and automatically updates them</description>
@@ -49,7 +49,7 @@
 		<url>git@github.com:ludovicianul/updatr.git</url>
 		<connection>scm:git:git@github.com:ludovicianul/updatr.git</connection>
 		<developerConnection>scm:git:git@github.com:ludovicianul/updatr.git</developerConnection>
-		<tag>HEAD</tag>
+		<tag>updatr-1.14</tag>
 	</scm>
 
 	<build>
