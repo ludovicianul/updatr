@@ -158,6 +158,11 @@ public final class UpdatrServiceImpl implements UpdatrService {
   private void loadUrlToFile(final String url, final File outputFile) throws IOException {
     LOG.info("Downloading " + outputFile.getName() + " from url: [" + url + "]");
 
+    if (url == null || url.trim().isEmpty()) {
+      LOG.info("Empty URL received. Skipping...");
+      return;
+    }
+    
     URL website = new URL(url);
     URLConnection connection = website.openConnection();
     connection.setReadTimeout(TIMEOUT);
