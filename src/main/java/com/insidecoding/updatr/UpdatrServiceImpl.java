@@ -126,7 +126,7 @@ public final class UpdatrServiceImpl implements UpdatrService {
         lineItems = inputLine.split("=");
 
         if (lineItems.length > 1) {
-          properties.put(lineItems[0].trim(), lineItems[1].trim());
+          properties.put(lineItems[0].trim(), inputLine.substring(inputLine.indexOf("=") + 1));
         } else {
           LOG.info("Invalid line: " + inputLine);
         }
