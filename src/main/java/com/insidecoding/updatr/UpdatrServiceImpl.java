@@ -162,7 +162,7 @@ public final class UpdatrServiceImpl implements UpdatrService {
       LOG.info("Empty URL received. Skipping...");
       return;
     }
-    
+
     URL website = new URL(url);
     URLConnection connection = website.openConnection();
     connection.setReadTimeout(TIMEOUT);
@@ -220,13 +220,15 @@ public final class UpdatrServiceImpl implements UpdatrService {
         new File(session.getScriptName())))) {
       String line = null;
       while ((line = reader.readLine()) != null) {
-        line = line.replaceAll(session.getAppName() + "-" + session.getExistingVersion(),
-            session.getAppName() + "-" + session.getAvailableVersion());
+        line = line.replaceAll(session.getAppName() + "-" + session.getExistingVersion()
+            + ".[a-zA-Z]*", session.getAppName() + "-" + session.getAvailableVersion());
+
         fileLines.add(line);
       }
     }
 
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(session.getAppName())))) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(
+        new File(session.getScriptName())))) {
       for (String toWrite : fileLines) {
         writer.write(toWrite);
         writer.newLine();
@@ -244,5 +246,4 @@ public final class UpdatrServiceImpl implements UpdatrService {
       }
     }
   }
-
 }
