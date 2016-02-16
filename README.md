@@ -6,8 +6,11 @@ Easily update you command line java tools.
 
 # Use as maven dependency
 The project is deployed on maven central.
-  <dependency>
-			<groupId>com.insidecoding</groupId>
-			<artifactId>updaTr</artifactId>
-			<version>1.14</version>
-	</dependency>
+
+```
+<dependency>
+	<groupId>com.insidecoding</groupId>
+	<artifactId>updaTr</artifactId>
+	<version>1.14</version>
+</dependency>
+```
