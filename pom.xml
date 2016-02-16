@@ -48,8 +48,8 @@
 
 	<scm>
 		<url>git@github.com:ludovicianul/updatr.git</url>
-		<connection>scm:git@github.com:ludovicianul/updatr.git</connection>
-		<developerConnection>scm:git@github.com:ludovicianul/updatr.git</developerConnection>
+		<connection>scm:git:git@github.com:ludovicianul/updatr.git</connection>
+		<developerConnection>scm:git:git@github.com:ludovicianul/updatr.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
