@@ -221,7 +221,7 @@ public final class UpdatrServiceImpl implements UpdatrService {
       String line = null;
       while ((line = reader.readLine()) != null) {
         line = line.replaceAll(session.getAppName() + "-" + session.getExistingVersion()
-            + ".[a-zA-Z]*", session.getAppName() + "-" + session.getAvailableVersion());
+            + ".[a-zA-Z]*", session.getAppName() + "-" + session.getAvailableVersion() + ".jar");
 
         fileLines.add(line);
       }
