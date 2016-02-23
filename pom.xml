@@ -3,7 +3,7 @@
 	<groupId>com.insidecoding</groupId>
 	<artifactId>updatr</artifactId>
 	<version>1.15-SNAPSHOT</version>
-	<name>updaTr</name>
+	<name>updatr</name>
 	<packaging>jar</packaging>
 	<description>Checks for the latest version of programs and automatically updates them</description>
 	<licenses>

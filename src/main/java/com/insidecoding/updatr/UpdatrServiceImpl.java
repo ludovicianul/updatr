@@ -172,6 +172,11 @@ public final class UpdatrServiceImpl implements UpdatrService {
 
       long expectedSize = connection.getContentLength();
       LOG.info("Expected size: " + expectedSize);
+
+      if (expectedSize == -1) {
+        throw new IOException("The provided URL [ " + url + "] does not contain a valid file!");
+      }
+      
       long transferedSize = 0L;
 
       while (transferedSize < expectedSize) {
