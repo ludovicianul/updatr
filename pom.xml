@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.insidecoding</groupId>
 	<artifactId>updatr</artifactId>
-	<version>1.15-SNAPSHOT</version>
+	<version>1.16-SNAPSHOT</version>
 	<name>updatr</name>
 	<packaging>jar</packaging>
 	<description>Checks for the latest version of programs and automatically updates them</description>
