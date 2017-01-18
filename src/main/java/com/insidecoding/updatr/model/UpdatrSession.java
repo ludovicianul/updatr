@@ -12,7 +12,6 @@ public final class UpdatrSession {
   private String availableVersion;
   private String downloadUrl;
   private String releaseNotesUrl;
-  private String newLibsUrl;
   private String appName;
   private String scriptName;
   private String[] scriptCommand;
@@ -37,10 +36,6 @@ public final class UpdatrSession {
     return releaseNotesUrl;
   }
 
-  public String getNewLibsUrl() {
-    return newLibsUrl;
-  }
-
   public String getAppName() {
     return appName;
   }
@@ -54,7 +49,6 @@ public final class UpdatrSession {
     private String availableVersion;
     private String downloadUrl;
     private String releaseNotesUrl;
-    private String newLibsUrl;
     private String appName;
     private String scriptName;
     private String[] scriptCommand;
@@ -63,7 +57,6 @@ public final class UpdatrSession {
       this.availableVersion = result.getAvailableVersion();
       this.downloadUrl = result.getDownloadUrl();
       this.releaseNotesUrl = result.getReleaseNotesUrl();
-      this.newLibsUrl = result.getNewLibsUrl();
     }
 
     public UpdatrSession build() {
@@ -96,7 +89,6 @@ public final class UpdatrSession {
     this.availableVersion = builder.availableVersion;
     this.downloadUrl = builder.downloadUrl;
     this.releaseNotesUrl = builder.releaseNotesUrl;
-    this.newLibsUrl = builder.newLibsUrl;
     this.appName = builder.appName;
     this.scriptName = builder.scriptName;
     this.scriptCommand = builder.scriptCommand;

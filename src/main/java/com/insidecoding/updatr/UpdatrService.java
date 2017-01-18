@@ -39,7 +39,6 @@ public interface UpdatrService {
    * <ul>
    * <li>download the new app version</li>
    * <li>display the release notes for the new version if available</li>
-   * <li>download any additional lib files if available</li>
    * <li>update the running script (if specified) with the new version</li>
    * </ul>
    * 

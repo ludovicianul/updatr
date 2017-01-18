@@ -10,7 +10,6 @@ public final class CheckForVersionResult {
   private String availableVersion;
   private String downloadUrl;
   private String releaseNotesUrl;
-  private String newLibsUrl;
   private boolean isNewVersion;
   private String existingVersion;
 
@@ -34,15 +33,10 @@ public final class CheckForVersionResult {
     return releaseNotesUrl;
   }
 
-  public String getNewLibsUrl() {
-    return newLibsUrl;
-  }
-
   public static final class Builder {
     private String availableVersion;
     private String downloadUrl;
     private String releaseNotesUrl;
-    private String newLibsUrl;
     private boolean isNewVersion;
     private String existingVersion;
 
@@ -65,11 +59,6 @@ public final class CheckForVersionResult {
       return this;
     }
 
-    public Builder withNewLibsUrl(String newLibs) {
-      this.newLibsUrl = newLibs;
-      return this;
-    }
-
     public Builder withIsNewVersion(boolean is) {
       this.isNewVersion = is;
       return this;
@@ -84,7 +73,6 @@ public final class CheckForVersionResult {
     this.availableVersion = builder.availableVersion;
     this.downloadUrl = builder.downloadUrl;
     this.releaseNotesUrl = builder.releaseNotesUrl;
-    this.newLibsUrl = builder.newLibsUrl;
     this.isNewVersion = builder.isNewVersion;
     this.existingVersion = builder.existingVersion;
   }
