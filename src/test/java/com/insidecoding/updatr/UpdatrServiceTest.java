@@ -22,7 +22,7 @@ public class UpdatrServiceTest {
 
     CheckForVersionResult result = updatr.checkForNewVersion(url.toString(), "2.01");
 
-    Assert.assertTrue(!result.isNewVersion());
+    Assert.assertTrue(result.isNewVersion());
   }
 
   @Test(expected = InvalidUpdatrFormatException.class)

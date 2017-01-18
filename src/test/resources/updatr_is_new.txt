@@ -1,3 +1,3 @@
 current_version=2.11
-download_url=
-release_notes=http://google.ro
+download_url=http://google.com
+release_notes=http://google.com
