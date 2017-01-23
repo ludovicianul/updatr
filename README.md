@@ -11,6 +11,6 @@ The project is deployed on maven central.
 <dependency>
 	<groupId>com.insidecoding</groupId>
 	<artifactId>updaTr</artifactId>
-	<version>1.19</version>
+	<version>1.18</version>
 </dependency>
 ```
